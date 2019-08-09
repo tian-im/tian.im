@@ -1,0 +1,23 @@
+# Dependencies
+markdown:         redcarpet
+highlighter:      true
+
+# Permalinks
+permalink:        pretty
+
+# Setup
+title:            tian.im
+tagline:
+description:      Ruby on Rails developer
+url:              http://tian.im
+
+author:
+  name:           'Tian'
+
+resume:
+  url:            http://resume.tian.im
+  title:          Resume
+
+paginate:         5
+
+plugins:          [jekyll-paginate]
