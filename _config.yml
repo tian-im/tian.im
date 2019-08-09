@@ -6,13 +6,13 @@ highlighter:      true
 permalink:        pretty
 
 # Setup
-title:            tian.im
-tagline:
-description:      Ruby on Rails developer
 url:              http://tian.im
+title:            tian.im
+tagline:          "Today is a gift. That's why it's called the present."
+description:
 
 author:
-  name:           'Tian'
+  name:           Tian
 
 resume:
   url:            http://resume.tian.im
