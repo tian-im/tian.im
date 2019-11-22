@@ -1,6 +1,7 @@
 ---
 layout: post
-category: Photoshoots
+categories:
+  - photos
 title: Sunset @ Adelaide Glenelg Beach
 ---
 
