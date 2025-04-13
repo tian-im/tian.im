@@ -5,7 +5,11 @@ entries:
   - title: The shape of my absence.
 
   - title: posts
-    url: posts
+    post_list:
+      limit: 3
+      show_more: true
+      show_more_text: See more...
+      show_more_url: posts
 
   - title: resume
     url: https://resume.tian.im/
