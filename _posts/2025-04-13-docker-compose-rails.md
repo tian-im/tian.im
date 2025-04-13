@@ -24,7 +24,7 @@ tags:
         - BUNDLE_PATH=/usr/local/bundle
         - RAILS_ENV=development
       # Replace my_app
-      command: bash -c "gem install rails -v 8.0.2 && rails new . -n my_app --database=postgresql --skip-bundle --force"
+      command: bash -c "gem install rails -v 8.0.2 && rails new . -n my_app --database=postgresql --force"
    ```
 
 * Run the builder.
