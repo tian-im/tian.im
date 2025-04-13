@@ -9,10 +9,8 @@ gem 'csv'
 gem 'bigdecimal'
 gem 'base64'
 gem 'logger'
-# gem 'jektex'
 gem 'no-style-please', github: 'riggraz/no-style-please'
 
 group :jekyll_plugins do
   gem 'jekyll-sitemap'
-  gem 'jekyll-paginate'
 end
