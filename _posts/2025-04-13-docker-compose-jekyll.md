@@ -2,7 +2,6 @@
 title: Docker-compose Jekyll
 layout: post
 tags:
-  - docker
   - programming
 ---
 
