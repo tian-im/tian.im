@@ -40,7 +40,7 @@ tags:
        environment:
          - BUNDLE_PATH=/usr/local/bundle
          - JEKYLL_ENV=development
-       command: bash -c "bundle install && bundle exec jekyll serve --host 0.0.0.0 --watch --force_polling"
+       command: bash -c "bundle install && bundle exec jekyll serve --host 0.0.0.0 --watch --incremental"
 
    volumes:
      ruby_3_4_bundle_cache:
