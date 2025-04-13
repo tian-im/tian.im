@@ -1,0 +1,14 @@
+# For documentation on this file, see:
+# https://github.com/riggraz/no-style-please#customize-the-menu
+
+entries:
+  - title: The shape of my absence.
+
+  - title: posts
+    url: posts
+
+  - title: tags
+    url: tags
+
+  - title: resume
+    url: https://resume.tian.im/

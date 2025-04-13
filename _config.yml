@@ -1,23 +1,26 @@
-# Dependencies
-markdown:         redcarpet
-highlighter:      true
+title: tian.im # name of the site
+author: Tian # name of site's author
+description: > # description of the site (multiple lines allowed)
+  TBD
 
-# Permalinks
-permalink:        pretty
+permalink: pretty
+paginate: 5
+# favicon: "logo.png" # name+extension of favicon (which must be put on the root folder)
 
-# Setup
-url:              http://tian.im
-title:            tian.im
-tagline:          "Today is a gift. That's why it's called the present."
-description:
+theme: no-style-please
+remote_theme: riggraz/no-style-please # if you are using GitHub Pages, change it to remote_theme: riggraz/no-style-please
 
-author:
-  name:           Tian
+theme_config:
+  appearance: "auto" # can be "light", "dark" or "auto"
+  back_home_text: "/" # customize text for homepage link in post layout
+  date_format: "%Y-%m-%d" # customize how date is formatted
+  show_description: false # show blog description in home page
+  lowercase_titles: true # show titles in lowercase in lists
 
-resume:
-  url:            http://resume.tian.im
-  title:          Resume
+sass:
+  style: compressed
 
-paginate:         5
-
-plugins:          [jekyll-paginate]
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-paginate

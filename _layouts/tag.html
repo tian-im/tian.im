@@ -1,0 +1,17 @@
+---
+layout: default
+---
+
+{%-include back_link.html-%}
+
+<h1>#{{ page.tag }}</h1>
+<ul>
+  {% for post in site.posts %}
+    {% if post.tags contains page.tag %}
+      <li>
+        <span>{{ post.date | date_to_string }}</span>
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>

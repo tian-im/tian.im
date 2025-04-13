@@ -1,2 +1,9 @@
 # tian.im
-new blog based on middleman
+
+http://tian.im/
+
+## Develop
+
+```shell
+docker-compose up
+```
