@@ -4,10 +4,9 @@ description: > # description of the site (multiple lines allowed)
   TBD
 
 permalink: pretty
-paginate: 5
 # favicon: "logo.png" # name+extension of favicon (which must be put on the root folder)
 
-theme: no-style-please
+# theme: no-style-please # use this for local development
 remote_theme: riggraz/no-style-please # if you are using GitHub Pages, change it to remote_theme: riggraz/no-style-please
 
 theme_config:
@@ -23,4 +22,3 @@ sass:
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
-  - jekyll-paginate
