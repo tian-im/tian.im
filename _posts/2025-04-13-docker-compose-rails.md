@@ -13,7 +13,7 @@ tags:
 
 * Add `docker-compose.yml`.
 
-   ```yml
+  ```yml
   services:
     builder:
       image: ruby:3.4
@@ -25,7 +25,7 @@ tags:
         - RAILS_ENV=development
       # Replace my_app
       command: bash -c "gem install rails -v 8.0.2 && rails new . -n my_app --database=postgresql --force"
-   ```
+  ```
 
 * Run the builder.
 
