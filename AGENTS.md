@@ -142,7 +142,13 @@ suite guards the photo-grid lightbox feature:
    time the Gemfile contains gems outside the Pages bundle (e.g.
    `csv`/`bigdecimal`/`webrick`/`jektex`). The build still succeeds; don't
    chase it away.
-10. Gitignored build/run artifacts: `_site/`, `*-cache/`, `.sass-cache/`,
+10. `Gemfile.lock` platforms: the dev/build containers are ARM64
+    (`aarch64-linux-gnu`) but GitHub Actions runners are x86_64 — after any
+    `bundle update`/`bundle lock`, make sure the lockfile includes
+    **`x86_64-linux`** (e.g. `bundle lock --add-platform x86_64-linux`
+    inside the ruby:3.4 container), otherwise CI's `bundle install` fails
+    with "local platform is x86_64-linux".
+11. Gitignored build/run artifacts: `_site/`, `*-cache/`, `.sass-cache/`,
     `.bundle/`, `vendor/`, `.jekyll-metadata`.
 
 ## Verify after any dependency change
