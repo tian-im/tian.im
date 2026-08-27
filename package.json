@@ -1,0 +1,16 @@
+{
+  "name": "tian.im",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal blog (Jekyll + no-style-please). npm test runs the regression suite for the photo-grid lightbox.",
+  "scripts": {
+    "test": "node test/run.mjs",
+    "test:build": "bash test/build.sh",
+    "test:static": "node test/static.test.mjs",
+    "test:browser": "node test/browser.test.mjs"
+  },
+  "engines": {
+    "node": ">=21"
+  }
+}

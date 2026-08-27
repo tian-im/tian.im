@@ -3,3 +3,139 @@
 
 @import "no-style-please";
 @import "monokai.css";
+
+/* ============================================================
+   Photo grid (WeChat-moments style) + lightbox
+   Trigger: posts with `images:` list in front matter
+   ============================================================ */
+
+.img-grid {
+  display: grid;
+  gap: 4px;
+  margin: 0.6rem 0 1.2rem;
+  max-width: 320px;
+}
+.img-grid--one   { grid-template-columns: minmax(0, 65%); }
+.img-grid--two   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.img-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.img-grid__cell {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  aspect-ratio: 1 / 1;
+  background: rgba(127, 127, 127, 0.18);
+  text-decoration: none;
+  line-height: 0;
+}
+.img-grid--one .img-grid__cell { aspect-ratio: 16 / 10; }
+.img-grid__cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+}
+.img-grid__cell:hover img { filter: brightness(0.94); }
+
+/* ---------- lightbox ---------- */
+
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.lb.is-open { visibility: visible; opacity: 1; }
+
+.lb__stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none; /* let horizontal swipe work without scrolling */
+  cursor: zoom-out;
+}
+
+.lb__img {
+  max-width: 88vw;
+  max-height: 84vh;
+  object-fit: contain;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+.lb__img.is-switching { animation: lb-fade 0.16s ease; }
+@keyframes lb-fade { from { opacity: 0.35; } to { opacity: 1; } }
+
+.lb__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lb__btn:hover { background: rgba(255, 255, 255, 0.32); }
+.lb__btn--prev { left: max(12px, env(safe-area-inset-left)); }
+.lb__btn--next { right: max(12px, env(safe-area-inset-right)); }
+
+.lb__counter {
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.lb__close {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+.lb__close:hover { background: rgba(255, 255, 255, 0.32); }
+
+/* The theme implements dark mode with a global  filter: invert(1)  on
+   the body (and a second invert on imgs so pictures keep their colors).
+   The lightbox is an overlay living inside that inverted tree, so we
+   neutralise it: under dark appearance, invert the overlay once more
+   (and cancel the theme's img invert) so it renders exactly as styled. */
+body[a="dark"] .lb { filter: invert(1); }
+body[a="dark"] .lb img { filter: invert(0); }
+@media (prefers-color-scheme: dark) {
+  body[a="auto"] .lb { filter: invert(1); }
+  body[a="auto"] .lb img { filter: invert(0); }
+}
+
+/* keep the grid hover effect correct in dark mode too */
+body[a="dark"] .img-grid__cell:hover img { filter: invert(1) brightness(0.94); }
+@media (prefers-color-scheme: dark) {
+  body[a="auto"] .img-grid__cell:hover img { filter: invert(1) brightness(0.94); }
+}

@@ -1,0 +1,45 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby 3.4 (Jekyll is pinned ~> 3.10, theme needs >= 3.4)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Install nodejs (jektex needs a JS runtime via execjs)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nodejs
+
+      - name: Materialise test fixtures into _posts (3x3 regression candidate; never shipped to production)
+        run: cp test/fixtures/posts/*.md _posts/
+
+      - name: Build site into test/.test-site (mirrors the Pages build; isolated from the dev _site)
+        run: bundle exec jekyll build -d test/.test-site
+        env:
+          JEKYLL_ENV: production
+
+      - name: Set up Node 22 (browser tests use the global WebSocket)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Static tests — generated markup, JS source guards
+        run: node test/static.test.mjs
+
+      - name: Browser tests — lightbox interactions in headless Chrome
+        run: node test/browser.test.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

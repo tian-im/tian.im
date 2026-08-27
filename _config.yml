@@ -19,6 +19,19 @@ theme_config:
 sass:
   style: compressed
 
+# keep development/tooling out of the published site.
+# NOTE: setting `exclude` REPLACES Jekyll's default list, so the defaults
+# (Gemfile, node_modules, vendor/*) are repeated here explicitly.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - test
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
