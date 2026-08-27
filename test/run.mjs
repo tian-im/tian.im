@@ -15,6 +15,7 @@ const ROOT = process.cwd();
 const JS_FILES = ["assets/js/gallery.js"];
 const WATCH = ["_layouts", "_includes", "_posts", "assets", "test/fixtures"];
 const STAMP = path.join("test", ".build-stamp");
+const SITE_DIR = path.join("test", ".test-site");
 
 let failures = 0;
 const step = (name, fn) => {
@@ -59,6 +60,7 @@ function treeHash() {
 
 function needsBuild() {
   if (process.env.SKIP_BUILD === "1") return { needed: false, why: "SKIP_BUILD=1" };
+  if (!fs.existsSync(SITE_DIR)) return { needed: true, why: "test/.test-site missing" };
   const cur = treeHash();
   const prev = fs.existsSync(STAMP) ? fs.readFileSync(STAMP, "utf8").trim() : "";
   return { needed: cur !== prev, why: prev ? "source tree changed since last build" : "no build stamp yet" };

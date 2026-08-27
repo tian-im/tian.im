@@ -1,5 +1,5 @@
 // Browser regression suite: drives the real lightbox in headless Chrome via CDP.
-// Needs: a built _site (run test/build.sh first) and Chrome/Chromium
+// Needs: a built test/.test-site (run test/build.sh first) and Chrome/Chromium
 // (auto-detected; override with CHROME_PATH). Set SHOTS=1 to save screenshots
 // into test/.artifacts/ for debugging.
 import fs from "node:fs";
@@ -14,8 +14,10 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const SITE = path.join(ROOT, "test", ".test-site");
 const ARTIFACTS = path.join(ROOT, "test", ".artifacts");
 
-// fixtures (the demo post doubles as the 3x3 regression fixture)
-const DEMO_HREF = "/2026/08/27/image-gallery-demo/";
+// fixtures (each doubles as a regression fixture)
+const DEMO_HREF = "/2026/08/27/image-gallery-demo/"; // 9 images  -> 3x3
+const TWO_HREF = "/2026/08/26/image-grid-two/";      // 2 images  -> 2 columns
+const CAP_HREF = "/2026/08/25/image-grid-cap/";      // 12 images -> capped at 9
 
 const { test, run } = suite();
 
@@ -24,7 +26,7 @@ if (!findChrome()) {
   process.exit(0);
 }
 
-assert(fs.existsSync(SITE), `_site missing — run "npm run test:build" first`);
+assert(fs.existsSync(SITE), `test/.test-site missing — run "npm run test:build" first`);
 
 const server = await serve(SITE);
 const chrome = await launchChrome();
@@ -63,15 +65,18 @@ async function clickCell(href, index) {
 async function lb() {
   return JSON.parse(await page.ev(`JSON.stringify((() => {
     const lb = document.querySelector('.lb');
-    if (!lb) return { open: false, counter: "", src: "", prev: "", next: "", bg: "", scrollLock: "" };
+    if (!lb) return { open: false, counter: "", src: "", alt: "", prev: "", next: "", bg: "", filter: "", imgFilter: "", scrollLock: "" };
     const img = document.querySelector('.lb__img');
     return {
       open: lb.classList.contains('is-open'),
       counter: document.querySelector('.lb__counter').textContent,
-      src: img ? img.src : '',
+      src: img ? img.src : "",
+      alt: img ? img.getAttribute("alt") : "",
       prev: getComputedStyle(document.querySelector('.lb__btn--prev')).visibility,
       next: getComputedStyle(document.querySelector('.lb__btn--next')).visibility,
       bg: getComputedStyle(document.querySelector('.lb')).backgroundColor,
+      filter: getComputedStyle(document.querySelector('.lb')).filter,
+      imgFilter: getComputedStyle(document.querySelector('.lb__img')).filter,
       scrollLock: document.body.style.overflow,
     };
   })())`));
@@ -86,21 +91,42 @@ async function closeLb() {
 
 await page.navigate(`${server.url}/posts/`, "light");
 
-test("posts page renders the 3x3 nine-grid fixture (9 cells, 3 columns)", async () => {
+test("posts page renders the demo 3x3 nine-grid (9 cells, 3 columns, gallery wiring)", async () => {
   await page.navigate(`${server.url}/posts/`, "light");
-  const info = JSON.parse(await page.ev(`JSON.stringify({
-    grids: document.querySelectorAll('[data-gallery]').length,
-    cells3: document.querySelectorAll('.img-grid--three .img-grid__cell').length,
-    cols3: getComputedStyle(document.querySelector('.img-grid--three')).gridTemplateColumns.split(' ').length,
-    script: !!document.querySelector('script[src*="gallery.js"]'),
-  })`));
-  assert(info.grids >= 2, "expected >= 2 grids on the posts page");
-  assertEq(info.cells3, 9, "nine-grid must have 9 cells");
-  assertEq(info.cols3, 3, "nine-grid must be 3 columns");
+  const info = JSON.parse(await page.ev(`JSON.stringify((() => {
+    const a = document.querySelector('a[href=${JSON.stringify(DEMO_HREF)}]');
+    const g = a.closest('li').querySelector('.img-grid');
+    return {
+      grids: document.querySelectorAll('[data-gallery]').length,
+      cells: g.querySelectorAll('.img-grid__cell').length,
+      cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
+      script: !!document.querySelector('script[src*="gallery.js"]'),
+    };
+  })())`));
+  assert(info.grids >= 4, "expected >= 4 thumbnail grids on the posts page (sunset + 3 fixtures)");
+  assertEq(info.cells, 9, "demo grid must have 9 cells");
+  assertEq(info.cols, 3, "demo grid must be 3 columns");
   assert(info.script, "gallery.js not loaded");
 });
 
-test("clicking the 5th thumbnail opens at 5/9 with correct image + nav buttons", async () => {
+test("two-column grid and the 9-cell cap hold in real markup", async () => {
+  await page.navigate(`${server.url}/posts/`, "light");
+  const info = JSON.parse(await page.ev(`JSON.stringify((() => {
+    const take = (href) => {
+      const a = document.querySelector('a[href=' + JSON.stringify(href) + ']');
+      const g = a.closest('li').querySelector('.img-grid');
+      return g ? { cells: g.querySelectorAll('.img-grid__cell').length, cols: getComputedStyle(g).gridTemplateColumns.split(' ').length } : null;
+    };
+    return { two: take(${JSON.stringify(TWO_HREF)}), cap: take(${JSON.stringify(CAP_HREF)}) };
+  })())`));
+  assert(info.two, "two-column fixture grid not found");
+  assertEq(info.two.cells, 2, "2-image grid must have 2 cells");
+  assertEq(info.two.cols, 2, "2-image grid must be 2 columns");
+  assert(info.cap, "cap fixture grid not found");
+  assertEq(info.cap.cells, 9, "12-image grid must be capped at 9 cells");
+});
+
+test("clicking the 5th thumbnail opens at 5/9 (light mode, no filter flip)", async () => {
   await page.navigate(`${server.url}/posts/`, "light");
   await clickCell(DEMO_HREF, 4);
   const s = await lb();
@@ -109,6 +135,7 @@ test("clicking the 5th thumbnail opens at 5/9 with correct image + nav buttons",
   assert(s.src.includes("/grid-5/"), "shown image is the 5th");
   assertEq(s.prev, "visible", "prev button");
   assertEq(s.next, "visible", "next button");
+  assertEq(s.filter, "none", "light mode must not flip the overlay");
   await maybeShot("lightbox-light");
 });
 
@@ -190,7 +217,33 @@ test("single-image grid hides the nav buttons", async () => {
   await closeLb();
 });
 
-test("detail page: post images open a lightbox in dark mode with correct overlay", async () => {
+test("a11y: focus moves into the lightbox, Tab is trapped, focus is restored", async () => {
+  await page.navigate(`${server.url}/posts/`, "light");
+  // focus the thumb we are about to click so restore has a deterministic target
+  await page.ev(`document.querySelectorAll('.img-grid--three .img-grid__cell')[2].focus()`);
+  await clickCell(DEMO_HREF, 2);
+  const s = await lb();
+  assert(s.open, "lightbox open");
+  assert(await page.ev(`document.activeElement === document.querySelector('.lb__close')`), "on open, focus must move to the close button");
+  assertEq(await page.ev(`document.querySelector('.lb__counter').getAttribute('aria-live')`), "polite", "counter must announce changes");
+  assert(s.alt.includes("图片 3"), `lightbox image alt should carry the thumbnail alt: got "${s.alt}"`);
+
+  // Tab from the LAST control must wrap to the FIRST
+  await page.ev(`document.querySelector('.lb__close').focus()`);
+  await page.key("Tab");
+  await sleep(250);
+  assert(await page.ev(`document.activeElement === document.querySelector('.lb__btn--prev')`), "Tab from last control must wrap to first (inside .lb)");
+  // Shift+Tab from the FIRST control must wrap to the LAST (modifiers: Shift = 8)
+  await page.ev(`document.querySelector('.lb__btn--prev').focus()`);
+  await page.key("Tab", 8);
+  await sleep(250);
+  assert(await page.ev(`document.activeElement === document.querySelector('.lb__close')`), "Shift+Tab from first control must wrap to last (inside .lb)");
+  await closeLb();
+  const restored = await page.ev(`document.activeElement.classList.contains('img-grid__cell')`);
+  assert(restored, "on close, focus must return to the opening thumbnail");
+});
+
+test("detail page: post images open a lightbox in dark mode with invert neutralised", async () => {
   await page.navigate(`${server.url}${DEMO_HREF}`, "dark");
   const bodyAttr = await page.ev(`document.body.getAttribute('a')`);
   assertEq(bodyAttr, "auto", "body appearance attr");
@@ -201,7 +254,11 @@ test("detail page: post images open a lightbox in dark mode with correct overlay
   const s = await lb();
   assert(s.open, "detail-page lightbox open");
   assertEq(s.counter, "1 / 2", "detail gallery holds the two demo images");
-  assertEq(s.bg, "rgba(0, 0, 0, 0.88)", "dark-mode overlay must render as styled (invert neutralised)");
+  // the theme inverts the whole body in dark mode; the overlay must be
+  // flipped ONCE (filter) to render as styled, and its img filter must cancel
+  // the theme's img invert — these are behavioural, not just presence checks
+  assertEq(s.filter, "invert(1)", "dark-mode overlay must flip once to neutralise the body invert");
+  assertEq(s.imgFilter, "invert(0)", "dark-mode lightbox image must cancel the theme img invert");
   await page.key("ArrowLeft");
   await sleep(250);
   assertEq((await lb()).counter, "2 / 2", "ArrowLeft in dark mode wraps to last");

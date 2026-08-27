@@ -122,9 +122,9 @@ export async function connect(wsUrl) {
       await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
       await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
     },
-    async key(k) {
-      await send("Input.dispatchKeyEvent", { type: "keyDown", key: k, code: k });
-      await send("Input.dispatchKeyEvent", { type: "keyUp", key: k, code: k });
+    async key(k, modifiers = 0) {
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: k, code: k, modifiers });
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: k, code: k, modifiers });
     },
     // center coordinates of the first element matching a CSS selector
     async center(selector) {

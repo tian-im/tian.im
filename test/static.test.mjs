@@ -90,6 +90,16 @@ test("gallery.js does not regress the `close` shadowing bug (regression 2026-08-
   assert(src.includes("touchstart"), "missing touch swipe support");
 });
 
+test("post_list.html guards against `images:` written as a scalar string", () => {
+  // a bare string would be iterated char-by-char by Liquid (post.images.size =
+  // char count, limit: 9 -> 9 broken cells); post.images.first is truthy only
+  // for real arrays, so the grid fails closed for strings (verified in docker:
+  // string images render no grid, build stays green)
+  const src = fs.readFileSync(path.join(ROOT, "_includes", "post_list.html"), "utf8");
+  assert(src.includes("post.images.first"), "the scalar-string guard (post.images.first) was removed from post_list.html");
+  assert(src.includes("limit: 9"), "the 9-cell cap must stay in the template");
+});
+
 test("gallery.js ships to _site", () => {
   const built = path.join(SITE, "assets", "js", "gallery.js");
   assert(fs.existsSync(built), "assets/js/gallery.js not in _site output");
@@ -130,6 +140,34 @@ test("fixture: the 9-image demo post stays a 3x3 nine-grid", () => {
   assert(seg, `9-grid fixture not in built posts page — run "npm test" (materialises fixtures, then builds)`);
   const cells = (seg.match(/img-grid__cell/g) || []).length;
   assertEq(cells, 9, "fixture grid must show 9 thumbnails");
+});
+
+test("two-column grid is exercised by real markup (2- and 4-image posts)", () => {
+  const html = fs.readFileSync(path.join(SITE, "posts", "index.html"), "utf8");
+  const twoGrids = liSegments(html).filter((s) => s.includes("img-grid--two"));
+  assert(twoGrids.length > 0, "no img-grid--two rendered — need a fixture with 2 or 4 images");
+  const two = imagePosts.find((p) => p.name.endsWith("image-grid-two.md"));
+  assert(two, "two-column fixture test/fixtures/posts/2026-08-26-image-grid-two.md missing");
+  const seg = liSegments(html).find((s) => s.includes(`href="${two.url}"`));
+  assertIncludes(seg, "img-grid img-grid--two", "2-image post must use the two-column grid class");
+  assertEq((seg.match(/img-grid__cell/g) || []).length, 2, "2-image post must render exactly 2 cells");
+  for (const g of twoGrids) {
+    const n = (g.match(/img-grid__cell/g) || []).length;
+    assert(n === 2 || n === 4, `img-grid--two with ${n} cells (expected 2 or 4)`);
+  }
+});
+
+test("grids never exceed 9 cells (WeChat cap), 12-image fixture is truncated", () => {
+  const html = fs.readFileSync(path.join(SITE, "posts", "index.html"), "utf8");
+  for (const seg of liSegments(html)) {
+    const n = (seg.match(/img-grid__cell/g) || []).length;
+    assert(n <= 9, `a grid rendered ${n} cells — the 9-cell cap was violated`);
+  }
+  const cap = imagePosts.find((p) => p.name.endsWith("image-grid-cap.md"));
+  assert(cap, "cap fixture test/fixtures/posts/2026-08-25-image-grid-cap.md missing");
+  const seg = liSegments(html).find((s) => s.includes(`href="${cap.url}"`));
+  assert(seg, "cap fixture grid missing from built posts page");
+  assertEq((seg.match(/img-grid__cell/g) || []).length, 9, "12-image post must render 9 cells");
 });
 
 test("home page (menu list, limit 3) renders a grid for the newest image post", () => {

@@ -16,4 +16,6 @@ fi
 node test/fixtures.mjs copy
 trap 'node test/fixtures.mjs clean' EXIT
 
-docker compose run --rm web bundle exec jekyll build -d /app/test/.test-site
+# JEKYLL_ENV=production mirrors CI/Pages; no difference today (goat_counter
+# is unset) but keeps the environments honest.
+docker compose run --rm -e JEKYLL_ENV=production web bundle exec jekyll build -d /app/test/.test-site
