@@ -20,8 +20,11 @@ sass:
   style: compressed
 
 # keep development/tooling out of the published site.
-# NOTE: setting `exclude` REPLACES Jekyll's default list, so the defaults
-# (Gemfile, node_modules, vendor/*) are repeated here explicitly.
+# NOTE: setting `exclude` REPLACES Jekyll 3.10's default list, so its seven
+# defaults (Gemfile, Gemfile.lock, node_modules, vendor/*) are repeated here
+# explicitly. Leading-dot entries (.jekyll-cache/, .sass-cache/,
+# .jekyll-metadata) need no entry — Jekyll's special-entry filter skips them
+# regardless. `gemfiles/` is not a Jekyll 3.10 default.
 exclude:
   - Gemfile
   - Gemfile.lock

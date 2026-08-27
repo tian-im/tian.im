@@ -13,7 +13,7 @@ import { cleanFixtures } from "./fixtures.mjs";
 
 const ROOT = process.cwd();
 const JS_FILES = ["assets/js/gallery.js"];
-const WATCH = ["_layouts", "_includes", "_posts", "assets", "test/fixtures"];
+const WATCH = ["_layouts", "_includes", "_posts", "_data", "assets", "test/fixtures"];
 const STAMP = path.join("test", ".build-stamp");
 const SITE_DIR = path.join("test", ".test-site");
 

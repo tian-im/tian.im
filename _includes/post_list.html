@@ -29,7 +29,7 @@
             <div class="img-grid {{ grid_cls }}" data-gallery>
               {%- for img in post.images limit: 9 -%}
               <a class="img-grid__cell" href="{{ img }}" data-full="{{ img }}">
-                <img src="{{ img }}" alt="{{ post.title | escape }} 图片 {{ forloop.index }}" loading="lazy" />
+                <img src="{{ img }}" alt="{{ post.title | escape }} image {{ forloop.index }}" loading="lazy" />
               </a>
               {%- endfor -%}
             </div>

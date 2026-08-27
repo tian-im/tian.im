@@ -28,10 +28,8 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
 
-      - name: Install nodejs (jektex needs a JS runtime via execjs)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq nodejs
-
       - name: Build site into test/.test-site (mirrors the Pages build; isolated from the dev _site)
+        # nodejs is already on PATH via setup-node, which jektex's execjs uses
         run: bundle exec jekyll build -d test/.test-site
         env:
           JEKYLL_ENV: production

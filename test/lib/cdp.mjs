@@ -143,7 +143,17 @@ export async function connect(wsUrl) {
         features: [{ name: "prefers-color-scheme", value: scheme }],
       });
       await this.send("Page.navigate", { url });
-      await sleep(2500);
+      // poll for load instead of sleeping a fixed amount
+      const deadline = Date.now() + 10000;
+      while (Date.now() < deadline) {
+        let rs = "unavailable";
+        try {
+          rs = await this.ev(`document.readyState`);
+        } catch { /* execution context mid-navigation */ }
+        if (rs === "complete") break;
+        await sleep(50);
+      }
+      await sleep(150); // let deferred gallery.js wiring settle
     },
   };
 }

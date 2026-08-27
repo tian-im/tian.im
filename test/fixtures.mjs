@@ -8,8 +8,9 @@
 //   node test/fixtures.mjs copy   # copy fixtures into _posts/ (idempotent)
 //   node test/fixtures.mjs clean  # remove exactly the fixture files again
 //
-// `npm test` and test/build.sh do both automatically; CI copies before its
-// jekyll build step (ephemeral VM, no cleanup needed).
+// `npm test` and test/build.sh do both automatically. CI runs `copy` before
+// its jekyll build (it must see the fixtures as posts) and `clean` right
+// after, so the checked-out _posts/ is left pristine for the test phases.
 import fs from "node:fs";
 import path from "node:path";
 

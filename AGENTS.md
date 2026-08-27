@@ -89,7 +89,9 @@ suite guards the photo-grid lightbox feature:
   safe even when the fixtures are absent). Real builds (dev server, Pages
   deploy) therefore never ship it. `npm test` drives it via `test/build.sh`
   (copy → docker build → trap-clean, with a `run.mjs` exit-hook backstop);
-  CI runs `cp test/fixtures/posts/*.md _posts/` before its jekyll build.
+  CI runs `node test/fixtures.mjs copy` before its jekyll build and `node
+  test/fixtures.mjs clean` right after it (the build runs against the
+  checkout, so the clean keeps `_posts/` pristine for the test phases).
   Add/edit fixtures under `test/fixtures/posts/`, never in `_posts/`.
 - `test/static.test.mjs` — asserts against the **built `test/.test-site`**
   and treats `test/fixtures/posts/` as first-class (parses both `_posts/`

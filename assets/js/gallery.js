@@ -18,7 +18,7 @@
     lb.className = "lb";
     lb.setAttribute("role", "dialog");
     lb.setAttribute("aria-modal", "true");
-    lb.setAttribute("aria-label", "图片预览");
+    lb.setAttribute("aria-label", "Image preview");
 
     var stage = document.createElement("div");
     stage.className = "lb__stage";
@@ -32,21 +32,21 @@
     var prev = document.createElement("button");
     prev.className = "lb__btn lb__btn--prev";
     prev.type = "button";
-    prev.setAttribute("aria-label", "上一张");
+    prev.setAttribute("aria-label", "Previous image");
     prev.innerHTML = "&#10094;";
     stage.appendChild(prev);
 
     var next = document.createElement("button");
     next.className = "lb__btn lb__btn--next";
     next.type = "button";
-    next.setAttribute("aria-label", "下一张");
+    next.setAttribute("aria-label", "Next image");
     next.innerHTML = "&#10095;";
     stage.appendChild(next);
 
     var closeBtn = document.createElement("button");
     closeBtn.className = "lb__close";
     closeBtn.type = "button";
-    closeBtn.setAttribute("aria-label", "关闭");
+    closeBtn.setAttribute("aria-label", "Close");
     closeBtn.innerHTML = "&#10005;";
     lb.appendChild(closeBtn);
 
@@ -72,6 +72,9 @@
       else if (e.key === "ArrowLeft") step(-1);
       else if (e.key === "ArrowRight") step(1);
       else if (e.key === "Tab") {
+        // NOTE: the trap assumes every focusable control inside the dialog
+        // is a <button>. If the lightbox ever grows other focusables
+        // (inputs, links…), generalise this query.
         var focusables = Array.prototype.slice.call(lb.querySelectorAll("button"));
         if (!focusables.length) return;
         var first = focusables[0];

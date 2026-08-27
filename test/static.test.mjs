@@ -117,6 +117,13 @@ test("CSS ships the grid + lightbox rules (incl. dark-mode invert neutralisation
   assertIncludes(css, 'body[a="dark"] .lb img{filter:invert(0)}', "dark-mode .lb img rule missing");
 });
 
+test("dev files stay out of the built site", () => {
+  const top = fs.readdirSync(SITE);
+  for (const banned of ["test", "Gemfile", "Gemfile.lock", "node_modules"]) {
+    assert(!top.includes(banned), `${banned} must not be copied into the built site (guarded by _config.yml exclude)`);
+  }
+});
+
 test("posts archive page renders a grid for every post with images (incl. fixtures)", () => {
   const html = fs.readFileSync(path.join(SITE, "posts", "index.html"), "utf8");
   for (const p of imagePosts) {
