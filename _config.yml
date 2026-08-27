@@ -6,7 +6,7 @@ description: > # description of the site (multiple lines allowed)
 permalink: pretty
 # favicon: "logo.png" # name+extension of favicon (which must be put on the root folder)
 
-theme: no-style-please # use this for local development
+# theme: no-style-please # uncomment only for local dev without jekyll-remote-theme (do not use with remote_theme)
 remote_theme: riggraz/no-style-please # if you are using GitHub Pages, change it to remote_theme: riggraz/no-style-please
 
 theme_config:
@@ -22,3 +22,4 @@ sass:
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-remote-theme
