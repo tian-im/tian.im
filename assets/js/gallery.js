@@ -53,8 +53,10 @@
 
     var counter = document.createElement("div");
     counter.className = "lb__counter";
+    counter.id = "lb-counter"; // referenced by the dialog's aria-labelledby
     counter.setAttribute("aria-live", "polite"); // announce "3 / 9" on change
     lb.appendChild(counter);
+    lb.setAttribute("aria-labelledby", counter.id);
 
     document.body.appendChild(lb);
 
@@ -66,13 +68,14 @@
     next.addEventListener("click", function (e) { e.stopPropagation(); step(1); });
     closeBtn.addEventListener("click", close);
 
-    // keyboard: Esc closes, arrows navigate (modifier-free only, so
-    // Cmd/Ctrl/Alt+arrows keep their native browser meaning), Tab is
-    // trapped in the lightbox (Shift+Tab included)
+    // keyboard: plain (or Shift) arrow keys navigate, Escape closes, Tab is
+    // trapped in the lightbox (Shift+Tab included). Copy/Cmd/Alt-modified
+    // keys pass through untouched so they keep their native browser
+    // meaning (e.g. Alt+Left = back, Cmd/Ctrl+Tab = switch tab).
     document.addEventListener("keydown", function (e) {
       if (!lb.classList.contains("is-open")) return;
       if (e.key === "Escape") close();
-      else if (e.key === "Tab") {
+      else if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         // NOTE: the trap assumes every focusable control inside the dialog
         // is a <button>. If the lightbox ever grows other focusables
         // (inputs, links…), generalise this query.
@@ -90,7 +93,7 @@
           first.focus();
         }
       } else if (e.metaKey || e.ctrlKey || e.altKey) {
-        return; // don't hijack browser/OS shortcuts (e.g. Alt+Left = back)
+        return; // don't hijack browser/OS shortcuts
       } else if (e.key === "ArrowLeft") step(-1);
       else if (e.key === "ArrowRight") step(1);
     });
@@ -120,6 +123,11 @@
     show();
     lb.classList.add("is-open");
     document.body.style.overflow = "hidden";
+    // hide the rest of the page from assistive tech while the modal is open
+    // (aria-modal covers most screen readers; this is belt and braces)
+    Array.prototype.slice.call(document.body.children).forEach(function (el) {
+      if (el !== lb) el.setAttribute("aria-hidden", "true");
+    });
     // move focus into the dialog (after it becomes visible)
     var first = lb.querySelector(".lb__close");
     if (first) first.focus();
@@ -129,6 +137,10 @@
     if (!lb) return;
     lb.classList.remove("is-open");
     document.body.style.overflow = "";
+    // un-hide the page content again
+    Array.prototype.slice.call(document.body.children).forEach(function (el) {
+      if (el.removeAttribute) el.removeAttribute("aria-hidden");
+    });
     // restore focus to whatever opened the lightbox
     if (lastFocused && lastFocused.isConnected && lastFocused.focus) {
       lastFocused.focus();
