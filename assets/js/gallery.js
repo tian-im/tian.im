@@ -27,6 +27,7 @@
     var img = document.createElement("img");
     img.className = "lb__img";
     img.alt = "";
+    img.setAttribute("draggable", "false"); // no drag ghost over the photo
     stage.appendChild(img);
 
     var prev = document.createElement("button");
@@ -65,12 +66,12 @@
     next.addEventListener("click", function (e) { e.stopPropagation(); step(1); });
     closeBtn.addEventListener("click", close);
 
-    // keyboard: Esc closes, arrows navigate, Tab is trapped in the lightbox
+    // keyboard: Esc closes, arrows navigate (modifier-free only, so
+    // Cmd/Ctrl/Alt+arrows keep their native browser meaning), Tab is
+    // trapped in the lightbox (Shift+Tab included)
     document.addEventListener("keydown", function (e) {
       if (!lb.classList.contains("is-open")) return;
       if (e.key === "Escape") close();
-      else if (e.key === "ArrowLeft") step(-1);
-      else if (e.key === "ArrowRight") step(1);
       else if (e.key === "Tab") {
         // NOTE: the trap assumes every focusable control inside the dialog
         // is a <button>. If the lightbox ever grows other focusables
@@ -88,7 +89,10 @@
           e.preventDefault();
           first.focus();
         }
-      }
+      } else if (e.metaKey || e.ctrlKey || e.altKey) {
+        return; // don't hijack browser/OS shortcuts (e.g. Alt+Left = back)
+      } else if (e.key === "ArrowLeft") step(-1);
+      else if (e.key === "ArrowRight") step(1);
     });
 
     // touch swipe

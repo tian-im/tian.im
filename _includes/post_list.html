@@ -28,8 +28,8 @@
             {%- else -%}{%- assign grid_cls = "img-grid--three" -%}{%- endif -%}
             <div class="img-grid {{ grid_cls }}" data-gallery>
               {%- for img in post.images limit: 9 -%}
-              <a class="img-grid__cell" href="{{ img }}" data-full="{{ img }}">
-                <img src="{{ img }}" alt="{{ post.title | escape }} image {{ forloop.index }}" loading="lazy" />
+              <a class="img-grid__cell" href="{{ img | escape }}" data-full="{{ img | escape }}">
+                <img src="{{ img | escape }}" alt="{{ post.title | escape }} image {{ forloop.index }}" loading="lazy" />
               </a>
               {%- endfor -%}
             </div>

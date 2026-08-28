@@ -21,7 +21,15 @@ export function serve(root) {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const url = new URL(req.url, "http://127.0.0.1");
-      let file = path.join(root, decodeURIComponent(url.pathname) === "/" ? "index.html" : decodeURIComponent(url.pathname));
+      let urlPath;
+      try {
+        urlPath = decodeURIComponent(url.pathname);
+      } catch {
+        res.writeHead(400);
+        res.end("bad request");
+        return;
+      }
+      let file = path.join(root, urlPath === "/" ? "index.html" : urlPath);
       if (!file.startsWith(root)) {
         res.writeHead(403);
         res.end("forbidden");

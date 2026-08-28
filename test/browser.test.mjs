@@ -57,7 +57,7 @@ async function maybeShot(name) {
 }
 
 // click the index-th thumbnail of the grid inside the <li> of a given post href
-async function clickCell(href, index) {
+async function clickDemoCell(href, index) {
   // an open lightbox covers the whole viewport — close it first
   if (await page.ev(`!!document.querySelector('.lb') && document.querySelector('.lb').classList.contains('is-open')`)) {
     await page.key("Escape");
@@ -145,7 +145,7 @@ test("two-column grid and the 9-cell cap hold in real markup", async () => {
 
 test("clicking the 5th thumbnail opens at 5/9 (light mode, no filter flip)", async () => {
   await page.navigate(`${server.url}/posts/`, "light");
-  await clickCell(DEMO_HREF, 4);
+  await clickDemoCell(DEMO_HREF, 4);
   const s = await lb();
   assert(s.open, "lightbox did not open");
   assertEq(s.counter, "5 / 9", "counter");
@@ -158,7 +158,7 @@ test("clicking the 5th thumbnail opens at 5/9 (light mode, no filter flip)", asy
 
 test("next/prev buttons navigate", async () => {
   if (!(await lb()).open) {
-    await clickCell(DEMO_HREF, 4);
+    await clickDemoCell(DEMO_HREF, 4);
   }
   const next = await page.center(".lb__btn--next");
   await page.click(next.x, next.y);
@@ -169,17 +169,24 @@ test("next/prev buttons navigate", async () => {
 });
 
 test("keyboard arrows navigate with wrap-around", async () => {
-  await clickCell(DEMO_HREF, 8); // 9/9
+  await clickDemoCell(DEMO_HREF, 8); // 9/9
   assertEq((await lb()).counter, "9 / 9", "open at last image");
   await page.key("ArrowRight");
   await waitFor(counterIs("1 / 9"), "next from last wraps to first");
   await page.key("ArrowLeft");
   await waitFor(counterIs("9 / 9"), "prev from first wraps to last");
+  // modifier-arrows must NOT step the lightbox (they stay browser shortcuts)
+  await page.key("ArrowLeft", 2); // Ctrl = 2
+  await sleep(200);
+  assertEq((await lb()).counter, "9 / 9", "Ctrl+ArrowLeft must not step the lightbox");
+  await page.key("ArrowRight", 1); // Alt = 1
+  await sleep(200);
+  assertEq((await lb()).counter, "9 / 9", "Alt+ArrowRight must not step the lightbox");
   await closeLb();
 });
 
 test("close via the ✕ button (regression 2026-08-27)", async () => {
-  await clickCell(DEMO_HREF, 2);
+  await clickDemoCell(DEMO_HREF, 2);
   assert((await lb()).open, "lightbox open");
   const btn = await page.center(".lb__close");
   await page.click(btn.x, btn.y);
@@ -187,19 +194,19 @@ test("close via the ✕ button (regression 2026-08-27)", async () => {
 });
 
 test("close via backdrop click and via Escape", async () => {
-  await clickCell(DEMO_HREF, 0);
+  await clickDemoCell(DEMO_HREF, 0);
   assert((await lb()).open, "lightbox open");
   await page.click(6, 6); // empty backdrop corner
   await waitFor(`!document.querySelector('.lb').classList.contains('is-open')`, "lightbox closes via backdrop");
   assert(!(await lb()).open, "backdrop click must close");
 
-  await clickCell(DEMO_HREF, 0);
+  await clickDemoCell(DEMO_HREF, 0);
   await page.key("Escape");
   await waitFor(`!document.querySelector('.lb').classList.contains('is-open')`, "lightbox closes via Escape");
 });
 
 test("body scroll is locked while open and restored on close", async () => {
-  await clickCell(DEMO_HREF, 0);
+  await clickDemoCell(DEMO_HREF, 0);
   await waitFor(`document.body.style.overflow === 'hidden'`, "scroll lock while open");
   await closeLb();
   await waitFor(`document.body.style.overflow === ''`, "scroll restored after close");
@@ -232,9 +239,10 @@ test("a11y: focus moves into the lightbox, Tab is trapped, focus is restored", a
   await page.navigate(`${server.url}/posts/`, "light");
   // focus the thumb we are about to click so restore has a deterministic target
   await page.ev(`document.querySelectorAll('.img-grid--three .img-grid__cell')[2].focus()`);
-  await clickCell(DEMO_HREF, 2);
+  await clickDemoCell(DEMO_HREF, 2);
   await waitFor(`document.activeElement === document.querySelector('.lb__close')`, "focus moves to the close button on open");
   assertEq(await page.ev(`document.querySelector('.lb__counter').getAttribute('aria-live')`), "polite", "counter must announce changes");
+  assertEq(await page.ev(`document.querySelector('.lb__img').getAttribute('draggable')`), "false", "lightbox image must not be drag-selectable");
   assert((await lb()).alt.includes("image 3"), `lightbox image alt should carry the thumbnail alt: "${(await lb()).alt}"`);
 
   // Tab from the LAST control must wrap to the FIRST
