@@ -1,0 +1,47 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22 (browser tests and fixture lifecycle)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Materialise test fixtures into _posts (regression fixtures; never shipped to production)
+        run: node test/fixtures.mjs copy
+
+      - name: Set up Ruby 3.4 (Jekyll is pinned ~> 3.10, theme needs >= 3.4)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Build site into test/.test-site (mirrors the Pages build; isolated from the dev _site)
+        # nodejs is already on PATH via setup-node, which jektex's execjs uses
+        run: bundle exec jekyll build -d test/.test-site
+        env:
+          JEKYLL_ENV: production
+
+      - name: Remove fixtures from _posts (keeps source state clean)
+        run: node test/fixtures.mjs clean
+
+      - name: Static tests — generated markup, JS source guards
+        run: node test/static.test.mjs
+
+      - name: Browser tests — lightbox interactions in headless Chrome
+        run: node test/browser.test.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

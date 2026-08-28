@@ -1,0 +1,43 @@
+{%-if include.category-%}
+  {%-assign posts = site.categories[include.category]-%}
+{%-else-%}
+  {%-assign posts = site.posts-%}
+{%-endif-%}
+
+{%-if include.limit and posts.size > include.limit-%}
+  {%-assign limit_exceeded = true-%}
+{%-else-%}
+  {%-assign limit_exceeded = false-%}
+{%-endif-%}
+
+{%- if posts.size > 0 -%}
+  <ul>
+    {%- for post in posts limit: include.limit -%}
+        <li>
+          <span>{{- post.date | date: site.theme_config.date_format -}}</span>
+          {% if site.theme_config.lowercase_titles == true %}
+          <a href="{{ post.url | relative_url }}">{{ post.title | downcase }}</a>
+          {% else %}
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          {% endif %}
+          {%- if post.images and post.images.size > 0 and post.images.first -%}
+            {%- assign img_count = post.images.size -%}
+            {%- if img_count > 9 -%}{%- assign img_count = 9 -%}{%- endif -%}
+            {%- if img_count == 1 -%}{%- assign grid_cls = "img-grid--one" -%}
+            {%- elsif img_count == 2 or img_count == 4 -%}{%- assign grid_cls = "img-grid--two" -%}
+            {%- else -%}{%- assign grid_cls = "img-grid--three" -%}{%- endif -%}
+            <div class="img-grid {{ grid_cls }}" data-gallery>
+              {%- for img in post.images limit: 9 -%}
+              <a class="img-grid__cell" href="{{ img | escape }}" data-full="{{ img | escape }}">
+                <img src="{{ img | escape }}" alt="{{ post.title | escape }} image {{ forloop.index }}" loading="lazy" />
+              </a>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </li>
+    {%- endfor -%}
+    {%- if include.show_more and limit_exceeded -%}
+      <li><a href="{{ include.show_more_url }}">{{ include.show_more_text | default: "Show more..." }}</a></li>
+    {%- endif -%}
+  </ul>
+{%- endif -%}

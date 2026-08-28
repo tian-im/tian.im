@@ -26,4 +26,8 @@ coverage
 gh-pages/
 pkg/
 test/dest
+test/.test-site/
+test/.artifacts/
+test/.build-stamp
+node_modules/
 tmp/*

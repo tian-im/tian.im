@@ -61,9 +61,59 @@ docker compose up
 docker run --rm -v "$PWD":/app -w /app -e JEKYLL_ENV=development ruby:3.4 \
   bash -lc "apt-get update -qq && apt-get install -y -qq nodejs && bundle exec jekyll build"
 
+# Regression tests for the photo-grid/lightbox feature
+npm test            # build test/.test-site if stale + static + headless-Chrome tests
+npm run test:build  # rebuild test/.test-site in docker (SKIP_BUILD=1 skips it in npm test)
+
 # Dependency upgrade — MUST run under Ruby >= 3.4 (docker), never the host Ruby
 docker run --rm -v "$PWD":/app -w /app ruby:3.4 bash -lc "bundle update"
 ```
+
+## Testing
+
+A lightweight, zero-dependency (`package.json` has no npm deps) regression
+suite guards the photo-grid lightbox feature:
+
+- `test/run.mjs` — orchestrator: `node --check`s the site JS, builds
+  `test/.test-site` (docker, unless fresh per `test/.build-stamp` or
+  `SKIP_BUILD=1`), then runs the phases below.
+- **Test builds are isolated from the dev server**: `test/build.sh` builds
+  into `test/.test-site` (gitignored), never `_site/` — a running
+  `jekyll serve --watch` owns `_site/`, and its regenerations used to race
+  with the suite and even leaked `test/` into `_site/` before the exclude
+  below existed. CI also builds to `test/.test-site`.
+- `test/fixtures.mjs` — lifecycle for the photo-grid test fixture: the 3×3
+  demo post lives **only** under `test/fixtures/posts/` and is copied into
+  `_posts/` for test builds (`node test/fixtures.mjs copy`), then removed
+  again (`clean` — only known fixture filenames are ever deleted, so it is
+  safe even when the fixtures are absent). Real builds (dev server, Pages
+  deploy) therefore never ship it. `npm test` drives it via `test/build.sh`
+  (copy → docker build → trap-clean, with a `run.mjs` exit-hook backstop);
+  CI runs `node test/fixtures.mjs copy` before its jekyll build and `node
+  test/fixtures.mjs clean` right after it (the build runs against the
+  checkout, so the clean keeps `_posts/` pristine for the test phases).
+  Add/edit fixtures under `test/fixtures/posts/`, never in `_posts/`.
+- `test/static.test.mjs` — asserts against the **built `test/.test-site`**
+  and treats `test/fixtures/posts/` as first-class (parses both `_posts/`
+  and the fixtures): every post with `images:` renders a `.img-grid` with
+  the right class and cell count; the 9-image fixture must remain a 3×3
+  nine-grid; the dark-mode invert-neutralisation rules live in
+  `assets/css/main.css`; and it guards the `close`-shadowing regression in
+  `assets/js/gallery.js`.
+- `test/browser.test.mjs` — drives the real lightbox in headless Chrome
+  (auto-detected, override `CHROME_PATH`) via a hand-rolled CDP client
+  (`test/lib/cdp.mjs`; needs Node >= 21 for the global WebSocket, CI uses
+  22): open-at-index, prev/next buttons, keyboard wrap-around, close via
+  ✕ / backdrop / Esc, single-image nav hiding, dark-mode overlay colour,
+  body scroll lock, zero page exceptions.
+- CI: `.github/workflows/test.yml` — ruby 3.4 `bundle exec jekyll build` +
+  both test phases on every push/PR. It invokes the phases **directly**
+  (`node test/static.test.mjs` etc.), so the test files must never require
+  docker themselves (docker only appears in `test/build.sh`).
+- **Keep `test/fixtures/posts/2026-08-27-image-gallery-demo.md`** — it is
+  the 3×3 regression fixture; deleting it fails the suite by design.
+- Browser tests deliberately don't depend on the external picsum images
+  loading — assertions use the lightbox counter/classes, not image bytes.
 
 ## Constraints / gotchas (learned the hard way)
 
@@ -94,7 +144,13 @@ docker run --rm -v "$PWD":/app -w /app ruby:3.4 bash -lc "bundle update"
    time the Gemfile contains gems outside the Pages bundle (e.g.
    `csv`/`bigdecimal`/`webrick`/`jektex`). The build still succeeds; don't
    chase it away.
-10. Gitignored build/run artifacts: `_site/`, `*-cache/`, `.sass-cache/`,
+10. `Gemfile.lock` platforms: the dev/build containers are ARM64
+    (`aarch64-linux-gnu`) but GitHub Actions runners are x86_64 — after any
+    `bundle update`/`bundle lock`, make sure the lockfile includes
+    **`x86_64-linux`** (e.g. `bundle lock --add-platform x86_64-linux`
+    inside the ruby:3.4 container), otherwise CI's `bundle install` fails
+    with "local platform is x86_64-linux".
+11. Gitignored build/run artifacts: `_site/`, `*-cache/`, `.sass-cache/`,
     `.bundle/`, `vendor/`, `.jekyll-metadata`.
 
 ## Verify after any dependency change
@@ -114,10 +170,30 @@ docker run --rm -v "$PWD":/app -w /app ruby:3.4 bash -lc "bundle update"
 
 - `Gemfile`, `Gemfile.lock` — dependencies + lock (see constraints above)
 - `_config.yml` — site config: `remote_theme`, `theme_config` (appearance
-  etc.), `plugins: [jekyll-feed, jekyll-seo-tag, jekyll-remote-theme]`
+  etc.), `plugins: [jekyll-feed, jekyll-seo-tag, jekyll-remote-theme]`;
+  `exclude:` keeps dev/tooling files out of the published site — `test/`,
+  `Gemfile*`, `node_modules`, `vendor/*`, `package*.json`, `AGENTS.md`,
+  `Dockerfile`, `docker-compose.yml`, `README.md` (setting `exclude`
+  *replaces* Jekyll 3.10's defaults, hence they are listed explicitly)
 - `assets/css/main.scss` — `@import "no-style-please"` (theme sass) +
-  `monokai.css`
+  `monokai.css`; also holds the photo-grid + lightbox styles incl. the
+  dark-mode invert neutralisation for the lightbox
+- `assets/js/gallery.js` — photo-grid lightbox (opened by the global
+  `<script defer>` injected in `_layouts/default.html` override)
+- `_layouts/default.html` / `_layouts/post.html` / `_includes/post_list.html`
+  — **local overrides** of the remote theme that implement the photo-grid
+  feature (`data-gallery="auto"` on post articles, grid rendering, global
+  gallery.js include). Local files beat the remote theme; keep the theme's
+  front-matter blocks intact when editing.
 - `index.md` / `posts.md` / `404.md` / `feed.xml` — site pages (layouts
   `home` / `post_list` / `page` come from the theme)
 - `docker-compose.yml`, `Dockerfile` — dev runtime (`ruby:3.4` + nodejs)
 - `CNAME` — `tian.im`; `_data/menu.yml` — nav menu
+- `package.json` — no npm deps; `npm test` is the regression entry point
+  (Node >= 21 for the browser tests)
+- `test/` — regression suite (see Testing above); `test/build.sh` is the
+  only place docker is used by tests; `test/fixtures/posts/` holds the 3×3
+  fixture post, copied into `_posts/` only during test builds
+- `.github/workflows/test.yml` — CI: ruby 3.4 jekyll build + static and
+  browser tests on every push/PR (the Pages deploy itself is a separate
+  built-in Pages workflow, not this file)
