@@ -171,9 +171,10 @@ suite guards the photo-grid lightbox feature:
 - `Gemfile`, `Gemfile.lock` — dependencies + lock (see constraints above)
 - `_config.yml` — site config: `remote_theme`, `theme_config` (appearance
   etc.), `plugins: [jekyll-feed, jekyll-seo-tag, jekyll-remote-theme]`;
-  `exclude:` keeps `test/`, `Gemfile*`, `node_modules`, `vendor/*` out of
-  the published site (setting `exclude` *replaces* Jekyll's defaults, so
-  they are listed explicitly)
+  `exclude:` keeps dev/tooling files out of the published site — `test/`,
+  `Gemfile*`, `node_modules`, `vendor/*`, `package*.json`, `AGENTS.md`,
+  `Dockerfile`, `docker-compose.yml`, `README.md` (setting `exclude`
+  *replaces* Jekyll 3.10's defaults, hence they are listed explicitly)
 - `assets/css/main.scss` — `@import "no-style-please"` (theme sass) +
   `monokai.css`; also holds the photo-grid + lightbox styles incl. the
   dark-mode invert neutralisation for the lightbox

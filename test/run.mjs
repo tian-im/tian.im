@@ -13,7 +13,18 @@ import { cleanFixtures } from "./fixtures.mjs";
 
 const ROOT = process.cwd();
 const JS_FILES = ["assets/js/gallery.js"];
-const WATCH = ["_layouts", "_includes", "_posts", "_data", "assets", "test/fixtures"];
+const WATCH = [
+  "_layouts",
+  "_includes",
+  "_posts",
+  "_data",
+  "assets",
+  "test/fixtures",
+  // files whose change should also invalidate the cached build:
+  "Gemfile",
+  "Gemfile.lock",
+  "test/build.sh",
+];
 const STAMP = path.join("test", ".build-stamp");
 const SITE_DIR = path.join("test", ".test-site");
 
@@ -51,7 +62,11 @@ function treeHash() {
       else entries.push(`${r}:${fs.statSync(p).mtimeMs}`);
     }
   };
-  for (const d of WATCH) if (fs.existsSync(d)) walk(d, d);
+  for (const d of WATCH) {
+    if (!fs.existsSync(d)) continue;
+    if (fs.statSync(d).isDirectory()) walk(d, d);
+    else entries.push(`${d}:${fs.statSync(d).mtimeMs}`);
+  }
   entries.push(`_config.yml:${fs.statSync("_config.yml").mtimeMs}`);
   entries.sort();
   h.update(entries.join("\n"));

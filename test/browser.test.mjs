@@ -80,7 +80,7 @@ async function clickCell(href, index) {
 async function lb() {
   return JSON.parse(await page.ev(`JSON.stringify((() => {
     const lb = document.querySelector('.lb');
-    if (!lb) return { open: false, counter: "", src: "", alt: "", prev: "", next: "", bg: "", filter: "", imgFilter: "", scrollLock: "" };
+    if (!lb) return { open: false, counter: "", src: "", alt: "", prev: "", next: "", filter: "", imgFilter: "", scrollLock: "" };
     const img = document.querySelector('.lb__img');
     return {
       open: lb.classList.contains('is-open'),
@@ -89,7 +89,6 @@ async function lb() {
       alt: img ? img.getAttribute("alt") : "",
       prev: getComputedStyle(document.querySelector('.lb__btn--prev')).visibility,
       next: getComputedStyle(document.querySelector('.lb__btn--next')).visibility,
-      bg: getComputedStyle(document.querySelector('.lb')).backgroundColor,
       filter: getComputedStyle(document.querySelector('.lb')).filter,
       imgFilter: getComputedStyle(document.querySelector('.lb__img')).filter,
       scrollLock: document.body.style.overflow,

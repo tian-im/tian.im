@@ -118,9 +118,15 @@ test("CSS ships the grid + lightbox rules (incl. dark-mode invert neutralisation
 });
 
 test("dev files stay out of the built site", () => {
+  // must mirror _config.yml's exclude list: dev/tooling files never ship
   const top = fs.readdirSync(SITE);
-  for (const banned of ["test", "Gemfile", "Gemfile.lock", "node_modules"]) {
-    assert(!top.includes(banned), `${banned} must not be copied into the built site (guarded by _config.yml exclude)`);
+  const banned = [
+    "test", "Gemfile", "Gemfile.lock", "node_modules",
+    "package.json", "package-lock.json",
+    "AGENTS.md", "Dockerfile", "docker-compose.yml", "README.md",
+  ];
+  for (const file of banned) {
+    assert(!top.includes(file), `${file} must not be copied into the built site (see _config.yml exclude)`);
   }
 });
 

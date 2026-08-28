@@ -22,9 +22,12 @@ sass:
 # keep development/tooling out of the published site.
 # NOTE: setting `exclude` REPLACES Jekyll 3.10's default list, so its seven
 # defaults (Gemfile, Gemfile.lock, node_modules, vendor/*) are repeated here
-# explicitly. Leading-dot entries (.jekyll-cache/, .sass-cache/,
-# .jekyll-metadata) need no entry — Jekyll's special-entry filter skips them
-# regardless. `gemfiles/` is not a Jekyll 3.10 default.
+# explicitly. The entries below that are not defaults are project files that
+# should never be served publicly: package.json(+lock) came with the test
+# tooling, and AGENTS.md / Dockerfile / docker-compose.yml / README.md are
+# repo metadata, not site content. Leading-dot entries (.jekyll-cache/,
+# .sass-cache/, .jekyll-metadata) need no entry — Jekyll's special-entry
+# filter skips them regardless.
 exclude:
   - Gemfile
   - Gemfile.lock
@@ -34,6 +37,12 @@ exclude:
   - vendor/gems/
   - vendor/ruby/
   - test
+  - package.json
+  - package-lock.json
+  - AGENTS.md
+  - Dockerfile
+  - docker-compose.yml
+  - README.md
 
 plugins:
   - jekyll-feed
